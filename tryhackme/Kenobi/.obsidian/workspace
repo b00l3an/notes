@@ -4,13 +4,13 @@
     "type": "split",
     "children": [
       {
-        "id": "5fba00f791d0e5f6",
+        "id": "3f367b882a685a30",
         "type": "leaf",
         "state": {
           "type": "markdown",
           "state": {
-            "file": "00 - Intro.md",
-            "mode": "source"
+            "file": "07 - Privesc.md",
+            "mode": "preview"
           }
         }
       }
@@ -68,7 +68,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "00 - Intro.md",
+                "file": "07 - Privesc.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -86,9 +86,17 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "5fba00f791d0e5f6",
+  "active": "3f367b882a685a30",
   "lastOpenFiles": [
-    "00 - Recon.md",
-    "Untitled.md"
+    "07 - Privesc.md",
+    "Privesc.md",
+    "12 - ftp.md",
+    "11 - RPC Recon.md",
+    "10 - Information from log.txt.md",
+    "06 - Recon - SMB.md",
+    "05 - Recon - nmap.md",
+    "00 - Intro.md",
+    "Untitled.md",
+    "10 - log.txt.md"
   ]
 }
