@@ -64,5 +64,35 @@ The scan reveals a second http server running ``Rejetto HTTP File Server 2.3`` .
 
 ## Foothold
 
+Using the metasploit framework to run the exploit we quickly get a shell 
 
+
+
+![steel-mountain-msf-rejetto](/home/boolean/notes/tryhackme/assets/steel mountain/steel-mountain-msf-rejetto.png)
+
+
+
+This gets a shell as the user bill
+
+
+
+## Privesc
+
+
+
+To escalate privileges we are going to use a script called [PowerUp](https://github.com/PowerShellMafia/PowerSploit/blob/master/Privesc/PowerUp.ps1) this will run checks for any known privesc vulnerabilities.
+
+One of the main things that this module highlights to to look out for the CanRestart:True, which is the case for the application AdvancedSystemCareService9. With this flag set to true, it tells us that we have permission to restart the application. Additionally the folder is writable. 
+
+
+
+Combining these two facts together, we can replace the existing executable with a poisoned one and restart the service so the server will run it as LocalSystem.
+
+
+
+![steel-mountain-privesc-check](/home/boolean/notes/tryhackme/assets/steel mountain/steel-mountain-privesc-check.png)
+
+### Create payload
+
+![steel-mountain-msfvenom](/home/boolean/notes/tryhackme/assets/steel mountain/steel-mountain-msfvenom.png)
 
